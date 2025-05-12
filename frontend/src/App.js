@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import StartPage from './components/StartPage';
 import Scanner from './components/Scanner';
@@ -6,79 +6,52 @@ import Results from './components/Results';
 import Login from './components/Login';
 import BatteryRedirect from './components/BatteryRedirect';
 
-const App = () => {
-  const [currentPage, setCurrentPage] = useState('start');
+function App() {
   const [scanResult, setScanResult] = useState(null);
 
-  const handleStart = () => {
-    setCurrentPage('scanner');
-  };
-
-  const handleScanResults = (result) => {
-    setScanResult(result);
-    setCurrentPage('results');
-  };
-
-  const handleLogin = () => {
-    setCurrentPage('login');
-  };
-
-  const handleLoginSuccess = (user) => {
-    // TODO: Implement point tracking or further user actions
-    console.log('Logged in user:', user);
-    // For now, just go back to start
-    setCurrentPage('start');
-  };
-
-  const handleScanAgain = () => {
-    setCurrentPage('scanner');
-  };
-
-  const handleBatteryBack = () => {
-    setCurrentPage('scanner');
-  };
-
-  // Render the appropriate page based on current state
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'start':
-        return <StartPage onStart={handleStart} />;
-      case 'scanner':
-        return <Scanner onResults={handleScanResults} />;
-      case 'results':
-        return (
-          <Results 
-            result={scanResult} 
-            onLogin={handleLogin} 
-            onScanAgain={handleScanAgain} 
-          />
-        );
-      case 'login':
-        return <Login onLoginSuccess={handleLoginSuccess} />;
-      case 'battery':
-        return <BatteryRedirect onBack={handleBatteryBack} />;
-      default:
-        return <StartPage onStart={handleStart} />;
-    }
-  };
-
   return (
-    <>
-      <Router>
-        <Routes>
-          <Route path="/" element={<StartPage />} />
-          <Route path="/scanner" element={<Scanner />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/battery" element={<BatteryRedirect />} />
-        </Routes>
-      </Router>
-      
-      <div className="App">
-        {renderPage()}
-      </div>
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<StartPageWrapper />} />
+        <Route path="/scanner" element={<ScannerWrapper setScanResult={setScanResult} />} />
+        <Route path="/results" element={<ResultsWrapper scanResult={scanResult} />} />
+        <Route path="/login" element={<LoginWrapper />} />
+        <Route path="/battery" element={<BatteryRedirectWrapper />} />
+      </Routes>
+    </Router>
   );
-};
+}
+
+// 각 페이지별 Wrapper에서 useNavigate 사용
+function StartPageWrapper() {
+  const navigate = useNavigate();
+  return <StartPage onStart={() => navigate('/scanner')} />;
+}
+
+function ScannerWrapper({ setScanResult }) {
+  const navigate = useNavigate();
+  return <Scanner onResults={(result) => { setScanResult(result); navigate('/results'); }} />;
+}
+
+function ResultsWrapper({ scanResult }) {
+  const navigate = useNavigate();
+  return (
+    <Results
+      result={scanResult}
+      onLogin={() => navigate('/login')}
+      onScanAgain={() => navigate('/scanner')}
+    />
+  );
+}
+
+function LoginWrapper() {
+  const navigate = useNavigate();
+  return <Login onLoginSuccess={() => navigate('/')} />;
+}
+
+function BatteryRedirectWrapper() {
+  const navigate = useNavigate();
+  return <BatteryRedirect onBack={() => navigate('/scanner')} />;
+}
 
 export default App;
