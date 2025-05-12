@@ -3,7 +3,6 @@
 ## Project Setup
 
 ### Prerequisites
-- Node.js (v14 or later)
 - npm or yarn
 
 ### Installation
