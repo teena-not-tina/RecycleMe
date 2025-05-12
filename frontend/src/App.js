@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import React, { useState } from 'react';
 import StartPage from './components/StartPage';
 import Scanner from './components/Scanner';
@@ -62,9 +63,21 @@ const App = () => {
   };
 
   return (
-    <div className="App">
-      {renderPage()}
-    </div>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<StartPage />} />
+          <Route path="/scanner" element={<Scanner />} />
+          <Route path="/results" element={<Results />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/battery" element={<BatteryRedirect />} />
+        </Routes>
+      </Router>
+      
+      <div className="App">
+        {renderPage()}
+      </div>
+    </>
   );
 };
 

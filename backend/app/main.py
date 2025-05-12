@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, recycling, points
+from backend.app.routers import auth, recycling, points
 
 app = FastAPI()
 
@@ -17,3 +17,8 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth")
 app.include_router(recycling.router, prefix="/recycle")
 app.include_router(points.router, prefix="/points")
+
+# Add a root endpoint
+@app.get("/")
+async def root():
+    return {"message": "Welcome to RecycleMe Backend"}
