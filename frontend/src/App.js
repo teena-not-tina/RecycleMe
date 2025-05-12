@@ -71,6 +71,7 @@ const App = () => {
           <Route path="/results" element={<Results />} />
           <Route path="/login" element={<Login />} />
           <Route path="/battery" element={<BatteryRedirect />} />
+          <Route path="/recycle" element={<StartPage />} />
         </Routes>
       </Router>
       
