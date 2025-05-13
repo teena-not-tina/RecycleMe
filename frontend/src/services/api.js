@@ -19,3 +19,21 @@ export const uploadRecyclableImage = async (file) => {
     throw error;
   }
 };
+
+export const detectObjects = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/detect`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error detecting objects:', error);
+    throw error;
+  }
+};
