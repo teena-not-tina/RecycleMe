@@ -1,5 +1,7 @@
 import React from 'react';
 import { detectObjects } from '../services/api';
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "frontend\src\services\firebase.js"; // Firebase 설정 파일 가져오기
 
 const Results = ({ result, onLogin, onScanAgain }) => {
   // Mapping recycling labels to more user-friendly descriptions
@@ -11,6 +13,19 @@ const Results = ({ result, onLogin, onScanAgain }) => {
     'metal': 'Metal Recyclable'
   };
 
+  // 재활용 종류에 따른 가중치(point)
+  const weightMapping = {
+  'plastic': 15,
+  'battery': 20,
+  'paper': 5,
+  'glass': 15,
+  'metal': 12
+  };
+
+  const totalWeight = result
+  ? result.reduce((sum, item) => sum + (weightMapping[item.class] || 0), 0)
+  : 0;
+
    // Check if any detected item is a battery
   const hasBattery = result && result.some(item => item.class === 'battery');
   
@@ -20,6 +35,32 @@ const Results = ({ result, onLogin, onScanAgain }) => {
       window.location.href = '/battery-service';
     } else {
       onLogin();
+    }
+  };
+
+    const handleGetPoints = async () => {
+    try {
+      const user = auth.currentUser; // 현재 로그인한 사용자 가져오기
+      if (!user) {
+        alert("You need to log in to earn points.");
+        return;
+      }
+
+      const userDocRef = doc(db, "users", user.uid); // Firestore에서 사용자 문서 참조
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const currentPoints = userDoc.data().points || 0; // 현재 포인트 가져오기
+        await updateDoc(userDocRef, {
+          points: currentPoints + totalWeight // 포인트 업데이트
+        });
+        alert(`You earned ${totalWeight} points!`);
+      } else {
+        alert("User data not found.");
+      }
+    } catch (error) {
+      console.error("Error updating points:", error);
+      alert("Failed to update points. Please try again.");
     }
   };
 
@@ -55,6 +96,12 @@ const Results = ({ result, onLogin, onScanAgain }) => {
           <p>No objects detected.</p>
         )}
         
+        <div className="bg-blue-100 border-l-4 border-blue-500 p-4 mb-4">
+          <p className="text-blue-700">
+            Total Weight: <strong>{totalWeight}</strong>
+          </p>
+        </div>
+
         {hasBattery ? (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
             <p className="text-yellow-700">
@@ -74,14 +121,23 @@ const Results = ({ result, onLogin, onScanAgain }) => {
             </p>
           </div>
         )}
-        
+
+        <button
+          onClick={handleGetPoints}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out mt-4"
+        >
+          Get Points
+        </button>
+
+        {/*}
         <div className="flex flex-col space-y-4">
           <button 
             onClick={handleProceed}
             className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out"
           >
-            {result.label === 'battery' ? 'Proceed to Battery Service' : 'Login to Earn Points'}
+            {hasBattery ? 'Proceed to Battery Service' : 'Login to Earn Points'}
           </button>
+          */}
           
           <button 
             onClick={onScanAgain}
@@ -91,7 +147,6 @@ const Results = ({ result, onLogin, onScanAgain }) => {
           </button>
         </div>
       </div>
-    </div>
   );
 };
 
