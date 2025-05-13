@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { uploadRecyclableImage } from '../services/api';
+import { useAuth } from '../App';
 
 const Scanner = ({ onResults }) => {
   const [image, setImage] = useState(null);
@@ -7,6 +8,7 @@ const Scanner = ({ onResults }) => {
   const [stream, setStream] = useState(null);
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
+  const { user, points, logout } = useAuth();
 
   // 스트림이 바뀔 때마다 video에 srcObject 할당
   useEffect(() => {
@@ -84,65 +86,93 @@ const Scanner = ({ onResults }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-green-50 p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 text-center">
-        <h2 className="text-2xl font-bold text-green-600 mb-4">Scan Your Recyclable</h2>
-        
-        {image && (
-          <div className="mb-4">
-            <img 
-              src={image} 
-              alt="Uploaded" 
-              className="max-w-full max-h-64 mx-auto rounded-lg object-cover"
-            />
-          </div>
-        )}
-
-        {cameraOpen ? (
-          <div className="flex flex-col items-center space-y-4">
-            <video
-              ref={videoRef}
-              autoPlay
-              className="w-full max-h-64 rounded-lg border"
-            />
-            <div className="flex w-full space-x-2">
-              <button
-                onClick={handleCapture}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-full transition duration-300"
+    <div className="min-h-screen flex flex-col bg-green-50 relative">
+      {/* Fixed login/user info section */}
+      <div className="fixed top-0 right-0 p-4 z-10">
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <div className="flex items-center space-x-4 bg-white rounded-full px-4 py-2 shadow-md">
+              <span className="font-bold text-green-700">{user.email}</span>
+              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Points: {points}</span>
+              <button 
+                onClick={logout} 
+                className="text-red-500 hover:underline"
               >
-                Capture
-              </button>
-              <button
-                onClick={handleCloseCamera}
-                className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-full transition duration-300"
-              >
-                Cancel
+                Logout
               </button>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col space-y-4">
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleFileUpload}
-              ref={fileInputRef}
-              className="hidden"
-            />
-            <button 
-              onClick={handleOpenCamera}
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out"
-            >
-              Open Camera
-            </button>
-            <button 
-              onClick={() => fileInputRef.current.click()}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out"
-            >
-              Upload Image
-            </button>
-          </div>
-        )}
+          ) : null}
+          
+          <button 
+            onClick={() => window.location.href = '/login'} 
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+
+      {/* Main content area */}
+      <div className="flex flex-col justify-center items-center flex-1 pt-16 p-4">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 text-center">
+          <h2 className="text-2xl font-bold text-green-600 mb-4">Scan Your Recyclable</h2>
+          
+          {image && (
+            <div className="mb-4">
+              <img 
+                src={image} 
+                alt="Uploaded" 
+                className="max-w-full max-h-64 mx-auto rounded-lg object-cover"
+              />
+            </div>
+          )}
+
+          {cameraOpen ? (
+            <div className="flex flex-col items-center space-y-4">
+              <video
+                ref={videoRef}
+                autoPlay
+                className="w-full max-h-64 rounded-lg border"
+              />
+              <div className="flex w-full space-x-2">
+                <button
+                  onClick={handleCapture}
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-full transition duration-300"
+                >
+                  Capture
+                </button>
+                <button
+                  onClick={handleCloseCamera}
+                  className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-full transition duration-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col space-y-4">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleFileUpload}
+                ref={fileInputRef}
+                className="hidden"
+              />
+              <button 
+                onClick={handleOpenCamera}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out"
+              >
+                Open Camera
+              </button>
+              <button 
+                onClick={() => fileInputRef.current.click()}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out"
+              >
+                Upload Image
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

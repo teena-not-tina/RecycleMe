@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../services/firebase';
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
@@ -14,11 +15,24 @@ const Login = ({ onLoginSuccess }) => {
     setSuccess(false);
   
     try {
-      const userCredential = isNewUser 
-        ? await createUserWithEmailAndPassword(auth, email, password)
-        : await signInWithEmailAndPassword(auth, email, password);
+      let userCredential;
+      if (isNewUser) {
+        // Create new user
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Create user document in Firestore
+        const userRef = doc(db, "users", userCredential.user.uid);
+        await setDoc(userRef, {
+          email: email,
+          points: 0,
+          createdAt: new Date()
+        });
+      } else {
+        // Sign in existing user
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      }
   
-      setSuccess(true); // Show success message
+      setSuccess(true);
       onLoginSuccess(userCredential.user);
     } catch (error) {
       setError(error.message);
