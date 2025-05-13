@@ -4,7 +4,13 @@ path: C:\Users\702-10\python2\recycleme\dataset
 # Train/val/test sets: specify directories, 
 train: train\images
 val: val\images 
-nc: 1
+nc: 7
 
 # Classes 
-names: ['battery']
+names: ['battery',
+         'BIODEGRADABLE',
+         'MTEAL',
+         'cardboard',
+         'glass',
+         'paper',
+         'plastic'] 
