@@ -1,7 +1,10 @@
 import React from 'react';
 import { useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 const StartPage = ({ onStart, onLogin, onLogout }) => {
+  const navigate = useNavigate();
+
   const { user, points } = useAuth();
 
   return (
@@ -19,6 +22,7 @@ const StartPage = ({ onStart, onLogin, onLogout }) => {
               >
                 Logout
               </button>
+              <button onClick={() => navigate('/points')}>Go to Points Page</button>
             </div>
           ) : null}
           
