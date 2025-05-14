@@ -54,19 +54,6 @@ function BatteryRedirectWrapper() {
   return <BatteryRedirect onBack={() => navigate('/scanner')} />;
 }
 
-function ScannerWrapper({ setScanResult }) {
-  const navigate = useNavigate();
-  return <Scanner onResults={(result) => { setScanResult(result); navigate('/results'); }} />;
-}
 
-function ResultsWrapper({ scanResult }) {
-  const navigate = useNavigate();
-  return (
-    <Results
-      result={scanResult}
-      onScanAgain={() => navigate('/scanner')}
-    />
-  );
-}
 
 export default App;

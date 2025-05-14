@@ -1,19 +1,19 @@
 import React from 'react';
-import { detectObjects } from '../services/api';
+// import { detectObjects } from '../services/api';
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { auth, db } from "frontend\src\services\firebase.js"; // Firebase 설정 파일 가져오기
+import { auth, db } from "../services/firebase"; // Firebase 설정 파일 가져오기
 
 const Results = ({ result, onLogin, onScanAgain }) => {
   // Mapping recycling labels to more user-friendly descriptions
-  const recyclingDescriptions = {
-    'plastic': 'Plastic Recyclable',
-    'paper': 'Paper Recyclable',
-    'glass': 'Glass Recyclable',
-    'metal': 'Metal Recyclable',
-    'cardboard': 'Cardboard Recyclable',
-    'biodegradable': 'Biodegradable Waste',
-    'other': 'Other Waste',
-  };
+  // const recyclingDescriptions = {
+  //   'plastic': 'Plastic Recyclable',
+  //   'paper': 'Paper Recyclable',
+  //   'glass': 'Glass Recyclable',
+  //   'metal': 'Metal Recyclable',
+  //   'cardboard': 'Cardboard Recyclable',
+  //   'biodegradable': 'Biodegradable Waste',
+  //   'other': 'Other Waste',
+  // };
 
   // 재활용 종류에 따른 가중치(point)
   const weightMapping = {
@@ -33,14 +33,14 @@ const Results = ({ result, onLogin, onScanAgain }) => {
    // Check if any detected item is a battery
   const hasBattery = result && result.some(item => item.class === 'Battery');
   
-   const handleProceed = () => {
-    if (hasBattery) {
-      // Redirect to battery service
-      window.location.href = '/battery-service';
-    } else {
-      onLogin();
-    }
-  };
+  // const handleProceed = () => {
+  //   if (hasBattery) {
+  //     // Redirect to battery service
+  //     window.location.href = '/battery-service';
+  //   } else {
+  //     onLogin();
+  //   }
+  // };
 
     const handleGetPoints = async () => {
     try {
@@ -68,18 +68,18 @@ const Results = ({ result, onLogin, onScanAgain }) => {
     }
   };
 
-  const handleFileUpload = async (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    setImage(URL.createObjectURL(file));
-    try {
-      const result = await detectObjects(file); // YOLO API 호출
-      onResults(result.detections); // 탐지 결과 전달
-    } catch (error) {
-      console.error('Error detecting objects:', error);
-    }
-  }
-};
+//   const handleFileUpload = async (event) => {
+//   const file = event.target.files[0];
+//   if (file) {
+//     setImage(URL.createObjectURL(file));
+//     try {
+//       const result = await detectObjects(file); // YOLO API 호출
+//       onResults(result.detections); // 탐지 결과 전달
+//     } catch (error) {
+//       console.error('Error detecting objects:', error);
+//     }
+//   }
+// };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-green-50 p-4">
