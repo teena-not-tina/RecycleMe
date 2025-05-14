@@ -25,6 +25,11 @@ async def detect_objects(file: UploadFile = File(...)):
         np_img = np.frombuffer(image_data, np.uint8)
         img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
+        # 디코딩된 이미지 확인
+        if img is None:
+            print("이미지 디코딩 실패")
+            return JSONResponse(content={"error": "Failed to decode image"}, status_code=400)
+
         # 첫 번째 YOLO 모델로 객체 탐지
         results1 = model1.predict(source=img, save=False, conf=0.5)
         detections1 = []
@@ -56,7 +61,7 @@ async def detect_objects(file: UploadFile = File(...)):
 
             return JSONResponse(content)
 
-        print(detections1) # Debugging line
+        print("Detections:", detections1) # Debugging line
 
         # 'other'가 없으면 첫 번째 결과만 반환
         return JSONResponse(content={"detections": detections1})

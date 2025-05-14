@@ -7,6 +7,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase"; // Firebase 설정 파일 가져오기
 
 const Results = ({ result, onLogin, onScanAgain }) => {
+  console.log('Result received in Results.js:', result); // 전달된 데이터 확인
   const navigate = useNavigate();
   const { user, points, setPoints, logout } = useAuth();
 
@@ -18,6 +19,7 @@ const Results = ({ result, onLogin, onScanAgain }) => {
     'metal': 'Metal Recyclable',
     'cardboard': 'Cardboard Recyclable',
     'biodegradable': 'Biodegradable Waste',
+    
     'battery' : 'Battery waste',
     'other': 'Other Waste',
   };
