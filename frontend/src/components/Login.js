@@ -1,22 +1,38 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../services/firebase';
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   const handleLogin = async () => {
     setError(null);
-
+    setSuccess(false);
+  
     try {
-      const userCredential = isNewUser 
-        ? await createUserWithEmailAndPassword(auth, email, password)
-        : await signInWithEmailAndPassword(auth, email, password);
-      
-      // Call parent component to handle successful login
+      let userCredential;
+      if (isNewUser) {
+        // Create new user
+        userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Create user document in Firestore
+        const userRef = doc(db, "users", userCredential.user.uid);
+        await setDoc(userRef, {
+          email: email,
+          points: 0,
+          createdAt: new Date()
+        });
+      } else {
+        // Sign in existing user
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      }
+  
+      setSuccess(true);
       onLoginSuccess(userCredential.user);
     } catch (error) {
       setError(error.message);
@@ -29,6 +45,12 @@ const Login = ({ onLoginSuccess }) => {
         <h2 className="text-2xl font-bold text-green-600 mb-6 text-center">
           {isNewUser ? 'Create Account' : 'Login'}
         </h2>
+
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+            Successfully logged in!
+          </div>
+        )}
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">

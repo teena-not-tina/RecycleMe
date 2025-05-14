@@ -52,7 +52,7 @@ async def detect_objects(file: UploadFile = File(...)):
                 "detections": detections1,
                 "other_detections": detections2
             }
-            print(content) # Debugging line
+            print("2개 모델 모두 실행한 결과 : " + content) # Debugging line
 
             return JSONResponse(content)
 

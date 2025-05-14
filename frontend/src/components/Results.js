@@ -1,19 +1,24 @@
 import React from 'react';
-// import { detectObjects } from '../services/api';
+import { addPointsToUser } from '../services/pointsService';
+import { useAuth } from '../App';
+// import { detectObjects } from '../services/api'; // 없어도 잘 가동됨
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase"; // Firebase 설정 파일 가져오기
 
 const Results = ({ result, onLogin, onScanAgain }) => {
+  const { user, points, setPoints, logout } = useAuth();
+
   // Mapping recycling labels to more user-friendly descriptions
-  // const recyclingDescriptions = {
-  //   'plastic': 'Plastic Recyclable',
-  //   'paper': 'Paper Recyclable',
-  //   'glass': 'Glass Recyclable',
-  //   'metal': 'Metal Recyclable',
-  //   'cardboard': 'Cardboard Recyclable',
-  //   'biodegradable': 'Biodegradable Waste',
-  //   'other': 'Other Waste',
-  // };
+  const recyclingDescriptions = {
+    'plastic': 'Plastic Recyclable',
+    'paper': 'Paper Recyclable',
+    'glass': 'Glass Recyclable',
+    'metal': 'Metal Recyclable',
+    'cardboard': 'Cardboard Recyclable',
+    'biodegradable': 'Biodegradable Waste',
+    'battery' : 'Battery waste',
+    'other': 'Other Waste',
+  };
 
   // 재활용 종류에 따른 가중치(point)
   const weightMapping = {
@@ -23,24 +28,25 @@ const Results = ({ result, onLogin, onScanAgain }) => {
   'metal': 12,
   'cardboard': 10,
   'biodegradable': 8,
+  'battery' : 15,
   'other': 0,
   };
+  const detections = result?.detections || [];
+  const totalWeight = detections.reduce((sum, item) => sum + (weightMapping[item.class] || 0), 0);
 
-  const totalWeight = result
-  ? result.reduce((sum, item) => sum + (weightMapping[item.class] || 0), 0)
-  : 0;
+ // other_detections 처리
+  const otherDetections = result.other_detections || [];
+  const hasBattery = otherDetections.some(item => item.class === 'battery');
 
-   // Check if any detected item is a battery
-  const hasBattery = result && result.some(item => item.class === 'Battery');
   
-  // const handleProceed = () => {
-  //   if (hasBattery) {
-  //     // Redirect to battery service
-  //     window.location.href = '/battery-service';
-  //   } else {
-  //     onLogin();
-  //   }
-  // };
+  const handleProceed = () => {
+    if (hasBattery) {
+      // Redirect to battery service
+      window.location.href = '/battery-service';
+    } else {
+      onLogin();
+    }
+  };
 
     const handleGetPoints = async () => {
     try {
@@ -68,27 +74,63 @@ const Results = ({ result, onLogin, onScanAgain }) => {
     }
   };
 
-//   const handleFileUpload = async (event) => {
-//   const file = event.target.files[0];
-//   if (file) {
-//     setImage(URL.createObjectURL(file));
-//     try {
-//       const result = await detectObjects(file); // YOLO API 호출
-//       onResults(result.detections); // 탐지 결과 전달
-//     } catch (error) {
-//       console.error('Error detecting objects:', error);
-//     }
-//   }
-// };
+  const handleClaimPoints = async () => {
+    if (user) {
+      try {
+        await addPointsToUser(user.uid, 10);
+        // Optimistically update local points state
+        setPoints(prevPoints => prevPoints + 10);
+      } catch (error) {
+        console.error('Error claiming points:', error);
+        // Optionally show an error message to the user
+      }
+    }
+  };
+
+  // 결과가 없을 경우 처리
+  // if (!result) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center bg-green-50">
+  //       <p className="text-xl text-red-500">No results found. Please try again.</p>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-green-50 p-4">
+    <div className="min-h-screen flex flex-col bg-green-50 relative" id="main-content">
+      {/* Fixed login/user info section */}
+      <div className="fixed top-0 right-0 p-4 z-10">
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <div className="flex items-center space-x-4 bg-white rounded-full px-4 py-2 shadow-md">
+              <span className="font-bold text-green-700">{user.email}</span>
+              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">Points: {points}</span>
+              <button 
+                onClick={logout} 
+                className="text-red-500 hover:underline"
+              >
+                Logout
+              </button>
+            </div>
+          ) : null}
+          
+          <button 
+            onClick={onLogin} 
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+          >
+            Login
+          </button>
+        </div>
+      </div>
+
+      {/* Main content area */}
+    <div className="flex flex-col justify-center items-center bg-green-50 p-4 flex-1 pt-16" id="secondary-content">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 text-center">
         <h2 className="text-3xl font-bold text-green-600 mb-4">Recycling Result</h2>
         
-        {result && result.length > 0 ? (
+        {result && Array.isArray(result) && result.length > 0 ? (
           <ul className="text-left">
-            {result.map((item, index) => (
+            {detections.map((item, index) => (
               <li key={index} className="mb-2">
                 <strong>Class:</strong> {item.class} <br />
                 <strong>Confidence:</strong> {(item.confidence * 100).toFixed(2)}% <br />
@@ -109,7 +151,7 @@ const Results = ({ result, onLogin, onScanAgain }) => {
         {hasBattery ? (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
             <p className="text-yellow-700">
-              
+              Batteries require special handling. Please proceed to the battery service for proper disposal.
             </p>
             <a 
               href="/battery" 
@@ -143,14 +185,15 @@ const Results = ({ result, onLogin, onScanAgain }) => {
           </button>
           */}
           
-          <button 
+          <button
             onClick={onScanAgain}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-full transition duration-300 ease-in-out mt-4"
           >
             Scan Another Item
           </button>
         </div>
       </div>
+    </div>
   );
 };
 
