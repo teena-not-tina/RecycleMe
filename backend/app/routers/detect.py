@@ -36,6 +36,11 @@ async def detect_objects(file: UploadFile = File(...)):
 
         # 디코딩된 이미지 확인
         if img is None:
+            print("이미지 디코딩 실패")
+            return JSONResponse(content={"error": "Failed to decode image"}, status_code=400)
+
+        # 디코딩된 이미지 확인
+        if img is None:
             logger.error("Failed to decode image")
             return JSONResponse(
                 content={"error": "Failed to decode image"}, 
