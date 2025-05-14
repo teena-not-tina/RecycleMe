@@ -112,14 +112,14 @@ const Results = ({ result, onLogin, onScanAgain }) => {
                 Logout
               </button>
             </div>
-          ) : null}
-          
-          <button 
-            onClick={onLogin} 
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
-          >
-            Login
-          </button>
+          ) : (
+            <button 
+              onClick={onLogin} 
+              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+            >
+              Login
+            </button>
+          )}
         </div>
       </div>
 
