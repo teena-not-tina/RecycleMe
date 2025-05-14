@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { uploadRecyclableImage } from '../services/api';
 import { useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 const Scanner = ({ onResults }) => {
+  const navigate = useNavigate();
   const [image, setImage] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [stream, setStream] = useState(null);
@@ -102,7 +104,13 @@ const Scanner = ({ onResults }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-green-50 relative">
-      {/* Fixed login/user info section */}
+      <button 
+        onClick={() => navigate('/')} 
+        className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+      >
+        Home
+      </button>
+      
       <div className="fixed top-0 right-0 p-4 z-10">
         <div className="flex items-center space-x-4">
               {user ? (

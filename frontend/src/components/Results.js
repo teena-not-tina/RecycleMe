@@ -1,11 +1,13 @@
 import React from 'react';
 import { addPointsToUser } from '../services/pointsService';
 import { useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
 // import { detectObjects } from '../services/api'; // 없어도 잘 가동됨
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase"; // Firebase 설정 파일 가져오기
 
 const Results = ({ result, onLogin, onScanAgain }) => {
+  const navigate = useNavigate();
   const { user, points, setPoints, logout } = useAuth();
 
   // Mapping recycling labels to more user-friendly descriptions
@@ -98,6 +100,13 @@ const Results = ({ result, onLogin, onScanAgain }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-green-50 relative" id="main-content">
+      <button 
+        onClick={() => navigate('/')} 
+        className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+      >
+        Home
+      </button>
+
       {/* Fixed login/user info section */}
       <div className="fixed top-0 right-0 p-4 z-10">
         <div className="flex items-center space-x-4">

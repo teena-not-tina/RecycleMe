@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
+import { useNavigate } from 'react-router-dom'; // 추가
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ const Login = ({ onLoginSuccess }) => {
   const [isNewUser, setIsNewUser] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate(); // 추가
 
   const handleLogin = async () => {
     setError(null);
@@ -41,6 +43,14 @@ const Login = ({ onLoginSuccess }) => {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-green-50 p-4">
+      {/* 홈 버튼 */}
+      <button 
+        onClick={() => navigate('/')} 
+        className="absolute top-4 left-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+      >
+        Home
+      </button>
+      
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-green-600 mb-6 text-center">
           {isNewUser ? 'Create Account' : 'Login'}
