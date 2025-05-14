@@ -145,19 +145,29 @@ function App() {
   );
 }
 
-// 각 페이지별 Wrapper에서 useNavigate 사용
-function StartPageWrapper(props) {
+// Wrapper components with navigation logic
+function StartPageWrapper() {
   const navigate = useNavigate();
-  return <StartPage {...props} onStart={() => navigate('/scanner')} />;
+  const { logout } = useAuth();
+  
+  return (
+    <StartPage
+      onStart={() => navigate('/scanner')}
+      onLogin={() => navigate('/login')}
+      onLogout={logout}
+    />
+  );
 }
 
 function ScannerWrapper({ setScanResult }) {
-   const navigate = useNavigate();
+  const navigate = useNavigate();
+  
   return (
     <Scanner
       onResults={(result) => {
-        setScanResult(result); // 결과 저장
-        navigate('/results'); // Results 페이지로 이동
+        console.log('Setting scan result in App.js:', result);
+        setScanResult(result); // Store result
+        // Navigation happens in the Scanner component now
       }}
     />
   );

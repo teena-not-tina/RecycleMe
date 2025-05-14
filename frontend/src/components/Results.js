@@ -7,6 +7,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../services/firebase"; // Firebase 설정 파일 가져오기
 
 const Results = ({ result, onLogin, onScanAgain }) => {
+  console.log('Result received in Results.js:', result); // 전달된 데이터 확인
   const navigate = useNavigate();
   const { user, points, setPoints, logout } = useAuth();
 
@@ -18,6 +19,7 @@ const Results = ({ result, onLogin, onScanAgain }) => {
     'metal': 'Metal Recyclable',
     'cardboard': 'Cardboard Recyclable',
     'biodegradable': 'Biodegradable Waste',
+
     'battery' : 'Battery waste',
     'other': 'Other Waste',
   };
@@ -34,27 +36,33 @@ const Results = ({ result, onLogin, onScanAgain }) => {
   'other': 0,
   };
   const detections = result?.detections || [];
-  const totalWeight = detections.reduce((sum, item) => sum + (weightMapping[item.class] || 0), 0);
+  const totalWeight = detections.reduce((sum, item) => {
+    // 클래스 이름을 소문자로 변환하여 매핑
+    const className = item.class.toLowerCase();
+    const weight = weightMapping[className] || 0;
+    console.log(`Original Class: ${item.class}, Normalized: ${className}, Weight: ${weight}`);
+    return sum + weight;
+  }, 0);
 
  // other_detections 처리
   const otherDetections = result.other_detections || [];
   const hasBattery = otherDetections.some(item => item.class === 'battery');
 
-  
-  const handleProceed = () => {
-    if (hasBattery) {
-      // Redirect to battery service
-      window.location.href = '/battery-service';
-    } else {
-      onLogin();
-    }
-  };
+  // const handleProceed = () => {
+  //   if (hasBattery) {
+  //     // Redirect to battery service
+  //     window.location.href = '/battery-service';
+  //   } else {
+  //     onLogin();
+  //   }
+  // };
 
     const handleGetPoints = async () => {
     try {
       const user = auth.currentUser; // 현재 로그인한 사용자 가져오기
       if (!user) {
         alert("You need to log in to earn points.");
+        onLogin();
         return;
       }
 
@@ -66,6 +74,7 @@ const Results = ({ result, onLogin, onScanAgain }) => {
         await updateDoc(userDocRef, {
           points: currentPoints + totalWeight // 포인트 업데이트
         });
+        setPoints(currentPoints + totalWeight); // Update UI points immediately
         alert(`You earned ${totalWeight} points!`);
       } else {
         alert("User data not found.");
@@ -76,18 +85,18 @@ const Results = ({ result, onLogin, onScanAgain }) => {
     }
   };
 
-  const handleClaimPoints = async () => {
-    if (user) {
-      try {
-        await addPointsToUser(user.uid, 10);
-        // Optimistically update local points state
-        setPoints(prevPoints => prevPoints + 10);
-      } catch (error) {
-        console.error('Error claiming points:', error);
-        // Optionally show an error message to the user
-      }
-    }
-  };
+  // const handleClaimPoints = async () => {
+  //   if (user) {
+  //     try {
+  //       await addPointsToUser(user.uid, 10);
+  //       // Optimistically update local points state
+  //       setPoints(prevPoints => prevPoints + 10);
+  //     } catch (error) {
+  //       console.error('Error claiming points:', error);
+  //       // Optionally show an error message to the user
+  //     }
+  //   }
+  // };
 
   // 결과가 없을 경우 처리
   // if (!result) {
@@ -137,13 +146,13 @@ const Results = ({ result, onLogin, onScanAgain }) => {
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6 text-center">
         <h2 className="text-3xl font-bold text-green-600 mb-4">Recycling Result</h2>
         
-        {result && Array.isArray(result) && result.length > 0 ? (
+        {detections && detections.length > 0 ? (
           <ul className="text-left">
             {detections.map((item, index) => (
               <li key={index} className="mb-2">
-                <strong>Class:</strong> {item.class} <br />
+                <strong>Class:</strong> {recyclingDescriptions[item.class] || item.class} <br />
                 <strong>Confidence:</strong> {(item.confidence * 100).toFixed(2)}% <br />
-                <strong>Box:</strong> {item.box.join(', ')}
+                <strong>Points:</strong> {weightMapping[item.class.toLowerCase()] || 0} <br />
               </li>
             ))}
           </ul>

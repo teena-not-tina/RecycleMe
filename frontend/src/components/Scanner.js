@@ -8,6 +8,7 @@ const Scanner = ({ onResults }) => {
   const [image, setImage] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [stream, setStream] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
   const { user, points, logout } = useAuth();
@@ -30,12 +31,18 @@ const Scanner = ({ onResults }) => {
     const file = event.target.files[0];
     if (file) {
       setImage(URL.createObjectURL(file)); // 이미지 미리보기
+      setIsLoading(true);
       try {
+        console.log('Uploading file image...');
         const result = await uploadRecyclableImage(file); // detect.py 호출
+        console.log('File upload result:', result);
         onResults(result); // 결과를 부모 컴포넌트로 전달
+        navigate('/results');
       } catch (error) {
         console.error('Error uploading image:', error);
         alert('Failed to process the image. Please try again.');
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -69,19 +76,27 @@ const Scanner = ({ onResults }) => {
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+      setIsLoading(true);
       canvas.toBlob(async (blob) => {
         if (!blob) {
           alert('캡처에 실패했습니다. 다시 시도해 주세요.');
+          setIsLoading(false);
           return;
         }
-        setImage(URL.createObjectURL(blob));
+        console.log('Blob:', blob); // Blob 데이터 확인
+        console.log('Blob MIME type:', blob.type); // MIME 타입 확인
         setImage(URL.createObjectURL(blob)); // 이미지 미리보기
         try {
+          console.log('Uploading camera image...');
           const result = await uploadRecyclableImage(blob); // detect.py 호출
+          console.log('Result from API:', result); // API 응답 확인
           onResults(result); // 결과를 부모 컴포넌트로 전달
+          navigate('/results'); // Result.js로 이동
         } catch (error) {
           console.error('Error uploading camera image:', error);
           alert('Failed to process the image. Please try again.');
+        } finally {
+          setIsLoading(false);
         }
       }, 'image/jpeg'); // MIME 타입 명시
 
