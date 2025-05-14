@@ -7,19 +7,23 @@ const Results = ({ result, onLogin, onScanAgain }) => {
   // Mapping recycling labels to more user-friendly descriptions
   const recyclingDescriptions = {
     'plastic': 'Plastic Recyclable',
-    'battery': 'Special Waste - Battery',
     'paper': 'Paper Recyclable',
     'glass': 'Glass Recyclable',
-    'metal': 'Metal Recyclable'
+    'metal': 'Metal Recyclable',
+    'cardboard': 'Cardboard Recyclable',
+    'biodegradable': 'Biodegradable Waste',
+    'other': 'Other Waste',
   };
 
   // 재활용 종류에 따른 가중치(point)
   const weightMapping = {
   'plastic': 15,
-  'battery': 20,
   'paper': 5,
   'glass': 15,
-  'metal': 12
+  'metal': 12,
+  'cardboard': 10,
+  'biodegradable': 8,
+  'other': 0,
   };
 
   const totalWeight = result
@@ -27,7 +31,7 @@ const Results = ({ result, onLogin, onScanAgain }) => {
   : 0;
 
    // Check if any detected item is a battery
-  const hasBattery = result && result.some(item => item.class === 'battery');
+  const hasBattery = result && result.some(item => item.class === 'Battery');
   
    const handleProceed = () => {
     if (hasBattery) {
@@ -105,7 +109,7 @@ const Results = ({ result, onLogin, onScanAgain }) => {
         {hasBattery ? (
           <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-4">
             <p className="text-yellow-700">
-              Batteries require special handling. You will be redirected to a specialized service.
+              
             </p>
             <a 
               href="/battery" 

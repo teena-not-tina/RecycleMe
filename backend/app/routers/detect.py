@@ -1,20 +1,21 @@
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
+from ultralytics import YOLO
 import cv2
 import numpy as np
 import os
 
 router = APIRouter()
 
-# YOLO 모델 초기화
-YOLO_CONFIG_PATH = "path/to/yolo.cfg"  # YOLO 설정 파일 경로
-YOLO_WEIGHTS_PATH = "path/to/yolo.weights"  # YOLO 가중치 파일 경로
-YOLO_CLASSES_PATH = "path/to/coco.names"  # 클래스 이름 파일 경로
+# 첫 번째 YOLO 모델
+model1 = YOLO("backend\ml_model\main_best1.pt") 
+# 두 번째 YOLO 모델 
+model2 = YOLO("backend\ml_model\battery_best.pt")
 
-# Load YOLO model
-net = cv2.dnn.readNet(YOLO_WEIGHTS_PATH, YOLO_CONFIG_PATH)
-with open(YOLO_CLASSES_PATH, "r") as f:
-    classes = [line.strip() for line in f.readlines()]
+# # Load YOLO model
+# net = cv2.dnn.readNet(YOLO_WEIGHTS_PATH, YOLO_CONFIG_PATH)
+# with open(YOLO_CLASSES_PATH, "r") as f:
+#     classes = [line.strip() for line in f.readlines()]
 
 @router.post("/api/detect")
 async def detect_objects(file: UploadFile = File(...)):
@@ -24,31 +25,42 @@ async def detect_objects(file: UploadFile = File(...)):
         np_img = np.frombuffer(image_data, np.uint8)
         img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
-        # YOLO 모델로 객체 탐지
-        blob = cv2.dnn.blobFromImage(img, 1/255.0, (416, 416), swapRB=True, crop=False)
-        net.setInput(blob)
-        layer_names = net.getLayerNames()
-        output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-        detections = net.forward(output_layers)
+        # 첫 번째 YOLO 모델로 객체 탐지
+        results1 = model1.predict(source=img, save=False, conf=0.5)
+        detections1 = []
+        for result in results1:
+            for box in result.boxes:
+                detections1.append({
+                    "class": model1.names[int(box.cls)],
+                    "confidence": float(box.conf),
+                    "box": box.xyxy.tolist()
+                })
 
-        # 탐지된 객체 정보 저장
-        height, width, _ = img.shape
-        results = []
-        for output in detections:
-            for detection in output:
-                scores = detection[5:]
-                class_id = np.argmax(scores)
-                confidence = scores[class_id]
-                if confidence > 0.5:  # 신뢰도 임계값
-                    center_x, center_y, w, h = (detection[0:4] * np.array([width, height, width, height])).astype("int")
-                    x = int(center_x - w / 2)
-                    y = int(center_y - h / 2)
-                    results.append({
-                        "class": classes[class_id],
-                        "confidence": float(confidence),
-                        "box": [x, y, int(w), int(h)]
+        # 'other'가 있으면 두 번째 모델 실행
+        if any(d["class"] == "other" for d in detections1):
+            results2 = model2.predict(source=img, save=False, conf=0.5)
+            detections2 = []
+            for result in results2:
+                for box in result.boxes:
+                    detections2.append({
+                        "class": model2.names[int(box.cls)],
+                        "confidence": float(box.conf),
+                        "box": box.xyxy.tolist()
                     })
+            # 두 번째 모델 결과만 반환하거나, 아래처럼 합쳐서 반환 가능
+            content={
+                "detections": detections1,
+                "other_detections": detections2
+            }
+            print(content) # Debugging line
 
-        return JSONResponse(content={"detections": results})
+            return JSONResponse(content)
+
+        print(detections1) # Debugging line
+
+        # 'other'가 없으면 첫 번째 결과만 반환
+        return JSONResponse(content={"detections": detections1})
+   
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+    
