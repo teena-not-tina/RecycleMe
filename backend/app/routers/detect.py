@@ -8,9 +8,9 @@ import os
 router = APIRouter()
 
 # 첫 번째 YOLO 모델
-model1 = YOLO("backend\ml_model\main_best1.pt") 
+model1 = YOLO(r"backend\ml_model\main_best1.pt") 
 # 두 번째 YOLO 모델 
-model2 = YOLO("backend\ml_model\battery_best.pt")
+model2 = YOLO(r"backend\ml_model\battery_best.pt")
 
 # # Load YOLO model
 # net = cv2.dnn.readNet(YOLO_WEIGHTS_PATH, YOLO_CONFIG_PATH)
